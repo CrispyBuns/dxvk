@@ -1835,7 +1835,7 @@ namespace dxvk {
 
     // Update depth bias if necessary
     if (ds != nullptr && m_depthBiasRepresentation.depthBiasRepresentation != VK_DEPTH_BIAS_REPRESENTATION_FLOAT_EXT) {
-      const int32_t vendorId = m_dxvkDevice->adapter()->deviceProperties().core.properties.vendorID;
+      const int32_t vendorId = m_dxvkDevice->properties().core.properties.vendorID;
       const bool exact = m_depthBiasRepresentation.depthBiasExact;
       const bool forceUnorm = m_depthBiasRepresentation.depthBiasRepresentation == VK_DEPTH_BIAS_REPRESENTATION_LEAST_REPRESENTABLE_VALUE_FORCE_UNORM_EXT;
       const float rValue = GetDepthBufferRValue(ds->GetCommonTexture()->GetFormatMapping().FormatColor, vendorId, exact, forceUnorm);
@@ -5997,12 +5997,11 @@ namespace dxvk {
 
 
   int64_t D3D9DeviceEx::DetermineInitialTextureMemory() {
-    auto memoryProp = m_adapter->GetDXVKAdapter()->memoryProperties();
+    auto adapterInfo = m_dxvkDevice->adapter()->info();
 
-    VkDeviceSize availableTextureMemory = 0;
-
-    for (uint32_t i = 0; i < memoryProp.memoryHeapCount; i++)
-      availableTextureMemory += memoryProp.memoryHeaps[i].size;
+    // Apparently we need to return video and system memory combined:
+    // https://github.com/doitsujin/dxvk/pull/1436
+    VkDeviceSize availableTextureMemory = adapterInfo.deviceMemory + adapterInfo.systemMemory;
 
     constexpr VkDeviceSize Megabytes = 1024 * 1024;
     // Windows will typically "reserve" some amount of video memory,
@@ -8789,7 +8788,7 @@ namespace dxvk {
     rs[D3DRS_CLIPPLANEENABLE] = 0;
     m_dirty.set(D3D9DeviceDirtyFlag::ClipPlanes);
 
-    const auto& limits = m_dxvkDevice->adapter()->deviceProperties().core.properties.limits;
+    const auto& limits = m_dxvkDevice->properties().core.properties.limits;
 
     rs[D3DRS_POINTSPRITEENABLE]          = FALSE;
     rs[D3DRS_POINTSCALEENABLE]           = FALSE;
