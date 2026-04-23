@@ -184,7 +184,8 @@ namespace dxvk {
     : m_builder (builder),
       m_shader  (shader),
       m_info    (info) {
-
+      if (m_info.options.flags.test(DxvkShaderCompileFlag::EnableSampleRateShading))
+        m_metadata.flags.set(DxvkShaderFlag::HasSampleRateShading);
     }
 
     /**
@@ -1727,7 +1728,9 @@ namespace dxvk {
           ioPass.resolvePatchConstantLocations(convertIoMap(linkage->prevStageOutputs, linkage->prevStage));
       }
 
-      if (m_metadata.stage == VK_SHADER_STAGE_FRAGMENT_BIT && m_info.options.flags.test(DxvkShaderCompileFlag::EnableSampleRateShading))
+      if (m_metadata.stage == VK_SHADER_STAGE_FRAGMENT_BIT
+       && m_info.options.flags.test(DxvkShaderCompileFlag::EnableSampleRateShading)
+       && (!linkage || !linkage->sampleLocations))
         ioPass.enableSampleInterpolation();
     }
 
